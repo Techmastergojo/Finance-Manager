@@ -1,4 +1,7 @@
 import 'package:digital_khata/controller/auth.dart';
+import 'package:digital_khata/controller/toggle_login_signup.dart';
+import 'package:digital_khata/screens/content/home/home_screen.dart';
+import 'package:digital_khata/screens/content/people/list_people_screen.dart';
 import 'package:flutter/material.dart';
 
 class MyAppView extends StatelessWidget {
@@ -19,7 +22,14 @@ class MyAppView extends StatelessWidget {
           outline: Colors.grey,
         ),
       ),
+      
       home: AuthController(),
+      routes: {
+        '/toggle_login_signup_screen': (context) => const ToggleLoginSignup(),
+        '/home_screen': (context) => HomeScreen(),
+        // '/profile_page': (context) => ProfilePage(),
+        '/list_people_screen': (context) => ListPeopleScreen(),
+      },
     );
   }
 }
