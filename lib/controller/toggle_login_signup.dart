@@ -25,11 +25,20 @@ class _ToggleLoginSignup extends State<ToggleLoginSignup> {
   Widget build(BuildContext context) {
     switch (currentPage) {
       case AuthPage.login:
-        return LoginScreen(onTap: () => switchPage(AuthPage.signup));
+        return LoginScreen(
+          onTap: () => switchPage(AuthPage.signup),
+          onCustomerTap: () => switchPage(AuthPage.customerLogin),
+        );
       case AuthPage.signup:
-        return SignupScreen(onTap: () => switchPage(AuthPage.login));
+        return SignupScreen(
+          onTap: () => switchPage(AuthPage.login),
+          onCustomerTap: () => switchPage(AuthPage.customerLogin),
+        );
       case AuthPage.customerLogin:
-        return LoginAsCustomerScreen(onTap: () => switchPage(AuthPage.login));
+        return LoginAsCustomerScreen(
+          onTap: () => switchPage(AuthPage.login),
+          onregTap: () => switchPage(AuthPage.signup),
+        );
     }
   }
 }
