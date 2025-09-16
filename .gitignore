@@ -58,7 +58,5 @@ app.*.map.json
 .env
 /lib/config/firebase_config.dart
 /lib/config/firebase_options.dart
-/android
-/ios
 /.vscode
 /test
