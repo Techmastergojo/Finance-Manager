@@ -112,10 +112,11 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                             '${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
                           ),
                           trailing: Text(
-                            '\$${data['price'].toString()}',
+                            'रू ${data['price'].toString()}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.green,
+                              fontSize: 16,
                             ),
                           ),
                         ),
