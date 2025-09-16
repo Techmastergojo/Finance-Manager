@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:digital_khata/screens/content/transaction/add_due_amount_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -50,7 +51,19 @@ class _ListPeopleScreenState extends State<ListPeopleScreen> {
                       // vertical: 8.0,
                     ),
                     child: GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AddDueAmountScreen(
+                              personId:
+                                  people[index].id,
+                              personName: data['name'] ?? '',
+                            ),
+                          ),
+                        );
+                      },
+
                       child: Card(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

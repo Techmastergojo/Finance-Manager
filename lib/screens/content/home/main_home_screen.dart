@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/helper/helper_function.dart';
+import 'package:digital_khata/screens/content/transaction/add_due_amount_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -11,8 +13,18 @@ class MainHomeScreen extends StatefulWidget {
 }
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
+    if (currentUser == null) {
+      return const Scaffold(body: Center(child: Text("No user logged in")));
+    }
+    final peopleStream = FirebaseFirestore.instance
+        .collection('people')
+        .where('createdBy', isEqualTo: currentUser!.email)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
@@ -246,7 +258,111 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 20), // People List
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: peopleStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No people found'));
+                  }
+
+                  final people = snapshot.data!.docs;
+
+                  return ListView.builder(
+                    itemCount: people.length,
+                    itemBuilder: (context, index) {
+                      final data = people[index].data() as Map<String, dynamic>;
+                      final personId = people[index].id;
+                      final name = data['name'] ?? '';
+                      final uniqueId = data['uniqueId'] ?? '';
+
+                      return FutureBuilder<QuerySnapshot>(
+                        future: FirebaseFirestore.instance
+                            .collection('people')
+                            .doc(personId)
+                            .collection('dueItems')
+                            .get(),
+                        builder: (context, dueSnapshot) {
+                          double totalDue = 0;
+                          if (dueSnapshot.hasData) {
+                            for (var item in dueSnapshot.data!.docs) {
+                              final itemData =
+                                  item.data() as Map<String, dynamic>;
+                              totalDue += (itemData['price'] ?? 0).toDouble();
+                            }
+                          }
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              leading: CircleAvatar(
+                                radius: 28,
+                                backgroundColor:
+                                    Colors.primaries[name.codeUnitAt(0) %
+                                        Colors.primaries.length],
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'ID: $uniqueId',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              trailing: Text(
+                                'रू ${totalDue.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => AddDueAmountScreen(
+                                      personId: people[index].id,
+                                      personName: data['name'] ?? '',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
