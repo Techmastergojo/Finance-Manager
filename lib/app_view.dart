@@ -1,4 +1,4 @@
-import 'package:digital_khata/screens/content/home/home_screen.dart';
+import 'package:digital_khata/controller/auth.dart';
 import 'package:flutter/material.dart';
 
 class MyAppView extends StatelessWidget {
@@ -19,7 +19,7 @@ class MyAppView extends StatelessWidget {
           outline: Colors.grey,
         ),
       ),
-      home: HomeScreen(),
+      home: AuthController(),
     );
   }
 }
