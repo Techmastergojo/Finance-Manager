@@ -14,11 +14,13 @@ class MainHomeScreen extends StatefulWidget {
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
   final User? currentUser = FirebaseAuth.instance.currentUser;
+
   @override
   Widget build(BuildContext context) {
     if (currentUser == null) {
       return const Scaffold(body: Center(child: Text("No user logged in")));
     }
+
     final peopleStream = FirebaseFirestore.instance
         .collection('people')
         .where('createdBy', isEqualTo: currentUser!.email)
@@ -30,6 +32,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
         child: Column(
           children: [
+            // Top row with welcome and logout
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -53,10 +56,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                             ),
                           ),
                         ),
-                        Icon(Icons.person, color: Colors.white),
+                        const Icon(Icons.person, color: Colors.white),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(width: 8),
                     Padding(
                       padding: const EdgeInsets.only(left: 10),
                       child: Column(
@@ -71,7 +74,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                             ),
                           ),
                           Text(
-                            FirebaseAuth.instance.currentUser?.email ?? "User",
+                            currentUser!.email ?? "User",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -87,151 +90,186 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                   onPressed: () {
                     logout();
                   },
-                  icon: Icon(Icons.logout_outlined),
+                  icon: const Icon(Icons.logout_outlined),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-            Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.width / 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.tertiary,
-                    Theme.of(context).colorScheme.secondary,
-                    Theme.of(context).colorScheme.primary,
-                  ],
-                  transform: GradientRotation(pi / 4),
-                ),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade400,
-                    blurRadius: 5,
-                    offset: Offset(5, 5),
-                  ),
-                ],
-              ),
+            // Summary Card (Total, Lowest, Highest)
+            StreamBuilder<QuerySnapshot>(
+              stream: peopleStream,
+              builder: (context, peopleSnapshot) {
+                if (!peopleSnapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Total Due Amount",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    "रू 1000.00",
-                    style: TextStyle(
-                      fontSize: 40,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 20,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              height: 20,
-                              width: 20,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.keyboard_arrow_down,
-                                  size: 15,
-                                  color: Colors.green[700],
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Heighest Due",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                                Text(
-                                  "रू 200.00",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
+                final people = peopleSnapshot.data!.docs;
+
+                double totalDue = 0;
+                double lowestDue = double.infinity;
+                double highestDue = 0;
+                String lowestPerson = '';
+                String highestPerson = '';
+
+                // Fetch each person's total due
+                List<Future<void>> futures = [];
+                for (var person in people) {
+                  final name =
+                      (person.data() as Map<String, dynamic>)['name'] ?? '';
+                  final personId = person.id;
+
+                  futures.add(
+                    FirebaseFirestore.instance
+                        .collection('people')
+                        .doc(personId)
+                        .collection('dueItems')
+                        .get()
+                        .then((snapshot) {
+                          double personTotal = 0;
+                          for (var item in snapshot.docs) {
+                            personTotal += (item.data()['price'] ?? 0)
+                                .toDouble();
+                          }
+
+                          totalDue += personTotal;
+                          if (personTotal < lowestDue) {
+                            lowestDue = personTotal;
+                            lowestPerson = name;
+                          }
+                          if (personTotal > highestDue) {
+                            highestDue = personTotal;
+                            highestPerson = name;
+                          }
+                        }),
+                  );
+                }
+
+                return FutureBuilder(
+                  future: Future.wait(futures),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    return Container(
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.width / 2,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.tertiary,
+                            Theme.of(context).colorScheme.secondary,
+                            Theme.of(context).colorScheme.primary,
                           ],
+                          transform: GradientRotation(pi / 4),
                         ),
-                        Row(
-                          children: [
-                            Container(
-                              height: 20,
-                              width: 20,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  Icons.keyboard_arrow_up,
-                                  size: 15,
-                                  color: Colors.red[800],
-                                ),
-                              ),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade400,
+                            blurRadius: 5,
+                            offset: const Offset(5, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Total Due Amount",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
                             ),
-                            SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Lowest Due",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                                Text(
-                                  "रू 500.00",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            "रू ${totalDue.toStringAsFixed(2)}",
+                            style: const TextStyle(
+                              fontSize: 40,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Lowest
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Lowest Due / Person",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  Text(
+                                    "रू ${lowestDue.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    lowestPerson,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // Highest
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    "Highest Due/ Person",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  Text(
+                                    "रू ${highestDue.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    highestPerson,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
+
+            // All Peoples List
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -244,9 +282,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    debugPrint("hi");
-                  },
+                  onTap: () => debugPrint("View All"),
                   child: Text(
                     "View All ▼",
                     style: TextStyle(
@@ -258,17 +294,14 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 20), // People List
+            const SizedBox(height: 20),
+
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: peopleStream,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text('No people found'));
                   }
 
                   final people = snapshot.data!.docs;
@@ -348,8 +381,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => AddDueAmountScreen(
-                                      personId: people[index].id,
-                                      personName: data['name'] ?? '',
+                                      personId: personId,
+                                      personName: name,
                                     ),
                                   ),
                                 );
