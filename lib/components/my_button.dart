@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 class MyButton extends StatelessWidget {
@@ -11,11 +12,18 @@ class MyButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(12),
-        ),
         padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              Theme.of(context).colorScheme.tertiary,
+              Theme.of(context).colorScheme.secondary,
+              Theme.of(context).colorScheme.primary,
+            ],
+            transform: const GradientRotation(pi / 4),
+          ),
+        ),
         child: Center(
           child: Text(
             text,

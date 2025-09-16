@@ -74,6 +74,7 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                maxLength: 10,
                 controller: _phoneController,
                 decoration: const InputDecoration(
                   labelText: 'Phone Number',
