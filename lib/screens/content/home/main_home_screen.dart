@@ -89,7 +89,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                 ),
                 IconButton(
                   onPressed: () {
-                    logout();
+                    logout(context);
                   },
                   icon: const Icon(Icons.logout_outlined),
                 ),
