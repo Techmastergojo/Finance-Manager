@@ -5,7 +5,11 @@ import 'package:flutter/material.dart';
 class LoginAsCustomerScreen extends StatefulWidget {
   final void Function()? onTap;
   final void Function()? onregTap;
-  const LoginAsCustomerScreen({super.key, required this.onTap, required this.onregTap});
+  const LoginAsCustomerScreen({
+    super.key,
+    required this.onTap,
+    required this.onregTap,
+  });
 
   @override
   State<LoginAsCustomerScreen> createState() => _LoginAsCustomerScreenState();
@@ -29,9 +33,8 @@ class _LoginAsCustomerScreenState extends State<LoginAsCustomerScreen> {
               children: [
                 Image.asset(
                   'assets/images/digital-khata-logo.png',
-                  height: 200,
-                  width: 200,
-                  color: Theme.of(context).colorScheme.inversePrimary,
+                  height: 100,
+                  width: 100,
                 ),
 
                 //
