@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/components/my_button.dart';
 import 'package:digital_khata/components/my_text_field.dart';
+import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
 class AddDueAmountScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class AddDueAmountScreen extends StatefulWidget {
 }
 
 class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
+  final DatabaseService _databaseService = DatabaseService();
   final TextEditingController itemController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
@@ -35,11 +37,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
 
     if (item.isEmpty || price <= 0) return;
 
-    await FirebaseFirestore.instance
-        .collection('people')
-        .doc(widget.personId)
-        .collection('dueItems')
-        .add({'item': item, 'price': price, 'time': Timestamp.now()});
+    await _databaseService.addDueItem(widget.personId, item, price);
 
     Navigator.pop(context); // Close popup
     itemController.clear();
@@ -48,12 +46,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final itemsStream = FirebaseFirestore.instance
-        .collection('people')
-        .doc(widget.personId)
-        .collection('dueItems')
-        .orderBy('time', descending: true)
-        .snapshots();
+    final itemsStream = _databaseService.getDueItemsStream(widget.personId);
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.personName)),

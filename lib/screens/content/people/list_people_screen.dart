@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/screens/content/transaction/add_due_amount_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
 class ListPeopleScreen extends StatefulWidget {
@@ -11,11 +11,12 @@ class ListPeopleScreen extends StatefulWidget {
 }
 
 class _ListPeopleScreenState extends State<ListPeopleScreen> {
-  final User? currentUser = FirebaseAuth.instance.currentUser;
+  final DatabaseService _databaseService = DatabaseService();
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
-    if (currentUser == null) {
+    if (_authService.currentUser == null) {
       return const Scaffold(body: Center(child: Text('No user logged in')));
     }
 
@@ -24,11 +25,7 @@ class _ListPeopleScreenState extends State<ListPeopleScreen> {
       child: Scaffold(
         appBar: AppBar(title: const Text('My People')),
         body: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('people')
-              .where('createdBy', isEqualTo: currentUser!.email)
-              .orderBy('createdAt', descending: true)
-              .snapshots(),
+          stream: _databaseService.peopleStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -46,18 +43,14 @@ class _ListPeopleScreenState extends State<ListPeopleScreen> {
                 final data = people[index].data() as Map<String, dynamic>;
                 return SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0,
-                      // vertical: 8.0,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => AddDueAmountScreen(
-                              personId:
-                                  people[index].id,
+                              personId: people[index].id,
                               personName: data['name'] ?? '',
                             ),
                           ),

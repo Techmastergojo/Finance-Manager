@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/helper/helper_function.dart';
 import 'package:digital_khata/screens/content/transaction/add_due_amount_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
 class MainHomeScreen extends StatefulWidget {
@@ -13,20 +13,17 @@ class MainHomeScreen extends StatefulWidget {
 }
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
-  final User? currentUser = FirebaseAuth.instance.currentUser;
+  final DatabaseService _databaseService = DatabaseService();
+  final AuthService _authService = AuthService();
   String searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
-    if (currentUser == null) {
+    if (_authService.currentUser == null) {
       return const Scaffold(body: Center(child: Text("No user logged in")));
     }
 
-    final peopleStream = FirebaseFirestore.instance
-        .collection('people')
-        .where('createdBy', isEqualTo: currentUser!.email)
-        .orderBy('createdAt', descending: true)
-        .snapshots();
+    final peopleStream = _databaseService.peopleStream;
 
     return SafeArea(
       child: Padding(
@@ -75,7 +72,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                             ),
                           ),
                           Text(
-                            currentUser!.email ?? "User",
+                            _authService.currentUser!.email ?? "User",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -108,49 +105,38 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
                   final people = peopleSnapshot.data!.docs;
 
-                  double totalDue = 0;
-                  double lowestDue = double.infinity;
-                  double highestDue = 0;
-                  String lowestPerson = '';
-                  String highestPerson = '';
-
-                  List<Future<void>> futures = [];
-                  for (var person in people) {
-                    final name =
-                        (person.data() as Map<String, dynamic>)['name'] ?? '';
-                    final personId = person.id;
-
-                    futures.add(
-                      FirebaseFirestore.instance
-                          .collection('people')
-                          .doc(personId)
-                          .collection('dueItems')
-                          .get()
-                          .then((snapshot) {
-                            double personTotal = 0;
-                            for (var item in snapshot.docs) {
-                              personTotal += (item.data()['price'] ?? 0)
-                                  .toDouble();
-                            }
-
-                            totalDue += personTotal;
-                            if (personTotal < lowestDue) {
-                              lowestDue = personTotal;
-                              lowestPerson = name;
-                            }
-                            if (personTotal > highestDue) {
-                              highestDue = personTotal;
-                              highestPerson = name;
-                            }
-                          }),
-                    );
-                  }
-
-                  return FutureBuilder(
-                    future: Future.wait(futures),
+                  return FutureBuilder<Map<String, double>>(
+                    future: _databaseService.getAllPeopleWithTotals(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final totals = snapshot.data ?? {};
+
+                      double totalDue = 0;
+                      double lowestDue = double.infinity;
+                      double highestDue = 0;
+                      String lowestPerson = '';
+                      String highestPerson = '';
+
+                      for (var person in people) {
+                        final data = person.data() as Map<String, dynamic>;
+                        final name = data['name'] ?? '';
+                        final personId = person.id;
+                        final personTotal = totals[personId] ?? 0;
+
+                        totalDue += personTotal;
+
+                        if (personTotal < lowestDue) {
+                          lowestDue = personTotal;
+                          lowestPerson = name;
+                        }
+
+                        if (personTotal > highestDue) {
+                          highestDue = personTotal;
+                          highestPerson = name;
+                        }
                       }
 
                       return Container(
@@ -350,21 +336,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                       final name = data['name'] ?? '';
                       final uniqueId = data['uniqueId'] ?? '';
 
-                      return FutureBuilder<QuerySnapshot>(
-                        future: FirebaseFirestore.instance
-                            .collection('people')
-                            .doc(personId)
-                            .collection('dueItems')
-                            .get(),
-                        builder: (context, dueSnapshot) {
-                          double totalDue = 0;
-                          if (dueSnapshot.hasData) {
-                            for (var item in dueSnapshot.data!.docs) {
-                              final itemData =
-                                  item.data() as Map<String, dynamic>;
-                              totalDue += (itemData['price'] ?? 0).toDouble();
-                            }
-                          }
+                      return FutureBuilder<double>(
+                        future: _databaseService.getTotalDue(personId),
+                        builder: (context, snapshot) {
+                          final totalDue = snapshot.data ?? 0;
 
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 6),
