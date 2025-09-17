@@ -8,7 +8,11 @@ class LoginScreen extends StatefulWidget {
   final void Function()? onTap;
   final void Function()? onCustomerTap;
 
-  const LoginScreen({super.key, required this.onTap, required this.onCustomerTap});
+  const LoginScreen({
+    super.key,
+    required this.onTap,
+    required this.onCustomerTap,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -61,9 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset(
                   'assets/images/digital-khata-logo.png',
-                  height: 200,
-                  width: 200,
-                  color: Theme.of(context).colorScheme.inversePrimary,
+                  height: 100,
+                  width: 100,
                 ),
 
                 //

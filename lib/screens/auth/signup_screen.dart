@@ -96,10 +96,9 @@ class _SignupScreenState extends State<SignupScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset(
-                  'assets/images/bhetghat-logo.png',
-                  height: 200,
-                  width: 200,
-                  color: Theme.of(context).colorScheme.inversePrimary,
+                  'assets/images/digital-khata-logo.png',
+                  height: 100,
+                  width: 100,
                 ),
 
                 //
@@ -134,21 +133,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: "Confirm Password",
                   obscureText: true,
                   controller: confirmpasswordcontroller,
-                ),
-
-                const SizedBox(height: 15),
-
-                // forget password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Forgot Password?',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    ),
-                  ],
                 ),
 
                 SizedBox(height: 25),
