@@ -16,68 +16,76 @@ class _HomeScreenState extends State<HomeScreen> {
   late Color selectedItem = Theme.of(context).colorScheme.primary;
   Color unSelectedItem = Colors.grey;
 
+  // Refresh data when swipe to refresh
+  Future<void> _refreshData() async {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: ClipRRect(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-        child: BottomNavigationBar(
-          onTap: (value) {
-            setState(() {
-              index = value;
-            });
-          },
-          backgroundColor: Colors.white,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: Scaffold(
+        bottomNavigationBar: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          child: BottomNavigationBar(
+            onTap: (value) {
+              setState(() {
+                index = value;
+              });
+            },
+            backgroundColor: Colors.white,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
 
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.home,
-                color: index == 0 ? selectedItem : unSelectedItem,
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.home,
+                  color: index == 0 ? selectedItem : unSelectedItem,
+                ),
+                label: 'Home',
               ),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.people_alt_rounded,
-                color: index == 1 ? selectedItem : unSelectedItem,
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.people_alt_rounded,
+                  color: index == 1 ? selectedItem : unSelectedItem,
+                ),
+                label: 'Peoples',
               ),
-              label: 'Peoples',
-            ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        shape: CircleBorder(),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (BuildContext context) => const AddPeopleScreen(),
-            ),
-          );
-        },
-        child: Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(25),
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.tertiary,
-                Theme.of(context).colorScheme.secondary,
-                Theme.of(context).colorScheme.primary,
-              ],
-              transform: GradientRotation(pi / 4),
-            ),
+            ],
           ),
-          child: Icon(Icons.add),
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: FloatingActionButton(
+          shape: CircleBorder(),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (BuildContext context) => const AddPeopleScreen(),
+              ),
+            );
+          },
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.tertiary,
+                  Theme.of(context).colorScheme.secondary,
+                  Theme.of(context).colorScheme.primary,
+                ],
+                transform: GradientRotation(pi / 4),
+              ),
+            ),
+            child: Icon(Icons.add),
+          ),
+        ),
+        body: index == 0 ? MainHomeScreen() : ListPeopleScreen(),
       ),
-      body: index == 0 ? MainHomeScreen() : ListPeopleScreen(),
     );
   }
 }
