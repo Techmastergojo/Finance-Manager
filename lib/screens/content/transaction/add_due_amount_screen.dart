@@ -78,7 +78,6 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
 
     // Prevent payment if it exceeds the net due
     if (amount <= 0 || amount > netDue) {
-      // Show an alert or a message to the user indicating that the payment cannot exceed the due amount
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Payment cannot exceed the due amount')),
       );
