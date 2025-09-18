@@ -55,8 +55,37 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
     final amount = double.tryParse(paymentController.text.trim()) ?? 0;
     final description = paymentDescriptionController.text.trim();
 
-    if (amount <= 0) return;
+    // Get the net due amount
+    final dueItemsStream = _databaseService.getDueItemsStream(widget.personId);
+    final paymentsStream = _databaseService.getPaymentsStream(widget.personId);
 
+    final dueSnapshot = await dueItemsStream.first;
+    final paymentSnapshot = await paymentsStream.first;
+
+    double totalDueAmount = 0;
+    for (var item in dueSnapshot.docs) {
+      final data = item.data() as Map<String, dynamic>;
+      totalDueAmount += (data['price'] ?? 0).toDouble();
+    }
+
+    double totalPaidAmount = 0;
+    for (var payment in paymentSnapshot.docs) {
+      final data = payment.data() as Map<String, dynamic>;
+      totalPaidAmount += (data['amount'] ?? 0).toDouble();
+    }
+
+    final netDue = totalDueAmount - totalPaidAmount;
+
+    // Prevent payment if it exceeds the net due
+    if (amount <= 0 || amount > netDue) {
+      // Show an alert or a message to the user indicating that the payment cannot exceed the due amount
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment cannot exceed the due amount')),
+      );
+      return;
+    }
+
+    // Proceed with adding the payment to Firestore
     await _databaseService.addPayment(widget.personId, amount, description);
 
     Navigator.pop(context);
