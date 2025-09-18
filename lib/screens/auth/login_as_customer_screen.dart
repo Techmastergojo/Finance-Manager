@@ -1,5 +1,7 @@
 import 'package:digital_khata/components/my_button.dart';
 import 'package:digital_khata/components/my_text_field.dart';
+import 'package:digital_khata/screens/customer/customer_screen.dart';
+import 'package:digital_khata/services/customer_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginAsCustomerScreen extends StatefulWidget {
@@ -18,6 +20,55 @@ class LoginAsCustomerScreen extends StatefulWidget {
 class _LoginAsCustomerScreenState extends State<LoginAsCustomerScreen> {
   //text controller
   final TextEditingController uniqueCodeController = TextEditingController();
+  bool isLoading = false;
+  String errorMessage = '';
+
+  // Login customer
+  Future<void> loginCustomer() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    final uniqueId = uniqueCodeController.text.trim();
+    
+    if (uniqueId.isEmpty) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Please enter your unique code';
+      });
+      return;
+    }
+
+    try {
+      final customer = await CustomerService.findCustomerByUniqueId(uniqueId);
+      
+      if (customer != null) {
+        // Navigate to customer screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CustomerScreen(
+              customerId: customer['id'],
+              customerName: customer['name'] ?? 'Customer',
+            ),
+          ),
+        );
+      } else {
+        setState(() {
+          errorMessage = 'Invalid unique code. Please check and try again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'An error occurred. Please try again.';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,16 +101,28 @@ class _LoginAsCustomerScreenState extends State<LoginAsCustomerScreen> {
                   obscureText: false,
                   controller: uniqueCodeController,
                 ),
+                
+                if (errorMessage.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                
                 const SizedBox(height: 15),
 
                 //sign in button
-                MyButton(
-                  text: "Login",
-                  onTap: () {
-                    // we will do here something...
-                    // check the unique code is availabe in DB or not if not show error message if yes nav to user profile
-                  },
-                ),
+                isLoading
+                  ? const CircularProgressIndicator()
+                  : MyButton(
+                      text: "Login",
+                      onTap: loginCustomer,
+                    ),
 
                 SizedBox(height: 15),
 
