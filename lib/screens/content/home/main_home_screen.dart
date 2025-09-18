@@ -382,9 +382,11 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                               ),
                               trailing: Text(
                                 'रू ${totalDue.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                                  color: totalDue > 0
+                                      ? Colors.red
+                                      : Colors.green,
                                   fontSize: 16,
                                 ),
                               ),

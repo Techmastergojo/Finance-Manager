@@ -11,7 +11,7 @@ class MyAppView extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "Khutruke",
+      title: "Digital Khata",
       theme: ThemeData(
         colorScheme: ColorScheme.light(
           surface: Colors.grey.shade100,

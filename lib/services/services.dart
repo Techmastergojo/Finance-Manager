@@ -35,6 +35,18 @@ class DatabaseService {
         .add({'item': item, 'price': price, 'time': Timestamp.now()});
   }
 
+  // Add payment (clear due) for a person
+  Future<void> addPayment(String personId, double amount, String description) async {
+    await peopleCollection
+        .doc(personId)
+        .collection('payments')
+        .add({
+          'amount': amount,
+          'description': description,
+          'time': Timestamp.now()
+        });
+  }
+
   // Get due items stream for a person
   Stream<QuerySnapshot> getDueItemsStream(String personId) {
     return peopleCollection
@@ -44,18 +56,38 @@ class DatabaseService {
         .snapshots();
   }
 
+  // Get payments stream for a person
+  Stream<QuerySnapshot> getPaymentsStream(String personId) {
+    return peopleCollection
+        .doc(personId)
+        .collection('payments')
+        .orderBy('time', descending: true)
+        .snapshots();
+  }
+
   // Calculate total due amount for a person
   Future<double> getTotalDue(String personId) async {
-    final snapshot = await peopleCollection
+    final dueSnapshot = await peopleCollection
         .doc(personId)
         .collection('dueItems')
         .get();
     
-    double total = 0;
-    for (var item in snapshot.docs) {
-      total += (item.data()['price'] ?? 0).toDouble();
+    double totalDue = 0;
+    for (var item in dueSnapshot.docs) {
+      totalDue += (item.data()['price'] ?? 0).toDouble();
     }
-    return total;
+    
+    final paymentSnapshot = await peopleCollection
+        .doc(personId)
+        .collection('payments')
+        .get();
+    
+    double totalPayments = 0;
+    for (var payment in paymentSnapshot.docs) {
+      totalPayments += (payment.data()['amount'] ?? 0).toDouble();
+    }
+    
+    return totalDue - totalPayments;
   }
 
   // Get all people with their total due amounts
