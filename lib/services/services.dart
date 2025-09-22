@@ -5,8 +5,8 @@ class DatabaseService {
   final User? user = FirebaseAuth.instance.currentUser;
 
   // People collection reference
-  final CollectionReference peopleCollection =
-      FirebaseFirestore.instance.collection('people');
+  final CollectionReference peopleCollection = FirebaseFirestore.instance
+      .collection('people');
 
   // Add a new person
   Future<void> addPerson(String name, String phone, String uniqueId) async {
@@ -29,22 +29,24 @@ class DatabaseService {
 
   // Add due item for a person
   Future<void> addDueItem(String personId, String item, double price) async {
-    await peopleCollection
-        .doc(personId)
-        .collection('dueItems')
-        .add({'item': item, 'price': price, 'time': Timestamp.now()});
+    await peopleCollection.doc(personId).collection('dueItems').add({
+      'item': item,
+      'price': price,
+      'time': Timestamp.now(),
+    });
   }
 
   // Add payment (clear due) for a person
-  Future<void> addPayment(String personId, double amount, String description) async {
-    await peopleCollection
-        .doc(personId)
-        .collection('payments')
-        .add({
-          'amount': amount,
-          'description': description,
-          'time': Timestamp.now()
-        });
+  Future<void> addPayment(
+    String personId,
+    double amount,
+    String description,
+  ) async {
+    await peopleCollection.doc(personId).collection('payments').add({
+      'amount': amount,
+      'description': description,
+      'time': Timestamp.now(),
+    });
   }
 
   // Get due items stream for a person
@@ -71,22 +73,22 @@ class DatabaseService {
         .doc(personId)
         .collection('dueItems')
         .get();
-    
+
     double totalDue = 0;
     for (var item in dueSnapshot.docs) {
       totalDue += (item.data()['price'] ?? 0).toDouble();
     }
-    
+
     final paymentSnapshot = await peopleCollection
         .doc(personId)
         .collection('payments')
         .get();
-    
+
     double totalPayments = 0;
     for (var payment in paymentSnapshot.docs) {
       totalPayments += (payment.data()['amount'] ?? 0).toDouble();
     }
-    
+
     return totalDue - totalPayments;
   }
 
@@ -95,14 +97,14 @@ class DatabaseService {
     final peopleSnapshot = await peopleCollection
         .where('createdBy', isEqualTo: user!.email)
         .get();
-    
+
     Map<String, double> totals = {};
-    
+
     for (var person in peopleSnapshot.docs) {
       final total = await getTotalDue(person.id);
       totals[person.id] = total;
     }
-    
+
     return totals;
   }
 }
