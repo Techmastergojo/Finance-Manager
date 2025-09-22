@@ -3,12 +3,12 @@
 <div align="center">
   <img src="assets/images/digital-khata-logo.png" alt="Digital Khata Logo" width="200"/>
 
-  **A comprehensive digital ledger application for shop owners to manage customer accounts, track dues, and maintain purchase history.**
+  **A comprehensive digital ledger application for shop owners to manage customer accounts, track dues, and maintain purchase history with Nepali language support.**
 </div>
 
 ## 📱 Overview
 
-Digital Khata is a Flutter-based mobile application designed to help shop owners and small business owners manage their customer accounts digitally. The app provides a complete solution for tracking customer dues, recording payments, and maintaining detailed transaction histories with beautiful UI.
+Digital Khata is a Flutter-based mobile application designed to help shop owners and small business owners manage their customer accounts digitally. The app provides a complete solution for tracking customer dues, recording payments, and maintaining detailed transaction histories with beautiful UI and offline-first capabilities.
 
 ## ✨ Key Features
 
@@ -35,8 +35,8 @@ Digital Khata is a Flutter-based mobile application designed to help shop owners
 - **Highest/Lowest due identification** - Quick insights into customer accounts
 - **Visual summaries** - Beautiful gradient cards with key metrics
 
-### 🌐 Localization (Planned)
-- **Nepali language support** - Full Nepali localization 
+### 🌐 Localization
+- **Nepali language support** - Full Nepali localization
 - **Custom fonts** - Kalimati font for authentic Nepali text rendering
 - **Cultural adaptation** - Designed for Nepali business practices
 
@@ -44,6 +44,8 @@ Digital Khata is a Flutter-based mobile application designed to help shop owners
 
 - **Framework**: Flutter 3.8.1+
 - **Backend**: Firebase (Auth, Firestore, Storage)
+- **State Management**: Provider
+- **Language Support**: Nepali Utils 3.0.3+
 - **Authentication**: Firebase Auth 6.0.2+
 - **Database**: Cloud Firestore 6.0.1+
 - **Storage**: Firebase Storage 13.0.1+
@@ -98,8 +100,6 @@ flutter run
 # For iOS
 flutter run --ios
 
-# For Web (if configured)
-flutter run -d chrome
 ```
 
 ## 📱 Usage
@@ -110,41 +110,6 @@ flutter run -d chrome
 3. **Add customers** - Use the floating action button to add new customers
 4. **Manage dues** - Tap on any customer to add due amounts or record payments
 5. **View dashboard** - Monitor your business metrics on the main screen
-
-## 📸 Screenshots
-
-### Authentication Screens
-#### Login Page
-<img src="assets/screenshots/login.png" width="200"/>
-
-#### Signup Page
-<img src="assets/screenshots/signup.png" width="200"/>
-
-#### Customer Login
-<img src="assets/screenshots/customer_login.png" width="200"/>
-
-### Main Application Screens
-#### Home Dashboard
-<img src="assets/screenshots/home_page.png" width="200"/>
-
-#### Customer List
-<img src="assets/screenshots/add_people.png" width="200"/>
-
-#### Customer Details
-<img src="assets/screenshots/customer_details_screen.png" width="200"/>
-
-#### Customer Dashboard
-<img src="assets/screenshots/customer_dashboard.png" width="200"/>
-
-### Transaction Management
-#### Add Due Amount
-<img src="assets/screenshots/add_due.png" width="200"/>
-
-#### Clear Due Dialog
-<img src="assets/screenshots/clear_due_dialogue.png" width="200"/>
-
-#### Logout Screen
-<img src="assets/screenshots/logout.png" width="200"/>
 
 ### Main Screens
 
@@ -171,7 +136,7 @@ lib/
 ├── components/          # Reusable UI components
 │   ├── my_button.dart
 │   └── my_text_field.dart
-├── controller/          # controllers
+├── controller/          # State management controllers
 │   ├── auth.dart
 │   └── toggle_login_signup.dart
 ├── helper/              # Utility functions
@@ -187,6 +152,7 @@ lib/
 ├── services/           # Business logic and API calls
 │   ├── customer_service.dart
 │   └── services.dart
+└── utils/              # Utility classes
 ```
 
 ## 🎨 UI/UX Features
@@ -195,26 +161,60 @@ lib/
 - **Gradient Themes** - Beautiful color schemes
 - **Responsive Layout** - Works on various screen sizes
 - **Smooth Animations** - Enhanced user experience
+- **Nepali Typography** - Authentic font rendering
 
+## 🔧 Configuration
+
+### Firebase Security Rules
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /people/{personId} {
+      allow read, write: if request.auth != null;
+      match /dueItems/{itemId} {
+        allow read, write: if request.auth != null;
+      }
+      match /payments/{paymentId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+  }
+}
+```
 
 ### App Configuration
 - Update `pubspec.yaml` for dependency management
 - Configure Firebase options in `lib/firebase_options.dart`
 - Customize themes in `lib/app_view.dart`
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
-
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Commit your changes: `git commit -m 'Add amazing feature'`
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## License
+## 📄 License
 
-This project is Open Source.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **Flutter Team** - For the amazing framework
+- **Firebase Team** - For the backend services
+- **Nepali Developer Community** - For localization support
+- **Kalimati Font** - For authentic Nepali typography
+
+## 📞 Support
+For support and questions:
+- Create an issue on GitHub
+- Contact the development team
+- Check the documentation
+
+---
 
 <div align="center">
   <p><strong>Built with ❤️ for the Nepali business community</strong></p>
