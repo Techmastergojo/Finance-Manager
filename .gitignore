@@ -60,6 +60,6 @@ app.*.map.json
 /lib/config/firebase_options.dart
 /.vscode
 /test
-/firebase.json
-/lib/firebase_options.dart
-/android/app/google-services.json
+# /firebase.json
+# /lib/firebase_options.dart
+# /android/app/google-services.json

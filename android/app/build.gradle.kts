@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.abhisheksharma.digital_khata"
+    namespace = "com.finance.manager"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.abhisheksharma.digital_khata"
+        applicationId = "com.finance.manager"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
