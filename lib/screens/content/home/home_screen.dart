@@ -13,7 +13,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int index = 0;
-  late Color selectedItem = Theme.of(context).colorScheme.primary;
   Color unSelectedItem = Colors.grey;
 
   // Refresh data when swipe to refresh
@@ -23,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Color selectedItem = Theme.of(context).colorScheme.primary;
     return RefreshIndicator(
       onRefresh: _refreshData,
       child: Scaffold(
