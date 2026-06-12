@@ -4,6 +4,12 @@
         android:label="Finance Manager"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+        <!-- Disable Impeller rendering engine (fixes blank screen on emulators/older devices) -->
+        <meta-data
+            android:name="io.flutter.app.android.EnableImpeller"
+            android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
