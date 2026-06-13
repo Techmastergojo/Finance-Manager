@@ -1,17 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/components/my_button.dart';
 import 'package:digital_khata/components/my_text_field.dart';
+import 'package:digital_khata/services/notification_service.dart';
 import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
 class AddDueAmountScreen extends StatefulWidget {
   final String personId;
   final String personName;
+  final String? whatsappPhone;
 
   const AddDueAmountScreen({
     super.key,
     required this.personId,
     required this.personName,
+    this.whatsappPhone,
   });
 
   @override
@@ -212,6 +215,35 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+
+                    // WhatsApp Reminder button
+                    if (netDue > 0 && widget.whatsappPhone != null && widget.whatsappPhone!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF25D366),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: const Icon(Icons.chat),
+                            label: const Text(
+                              'Send WhatsApp Reminder',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            onPressed: () => openWhatsApp(
+                              phone: widget.whatsappPhone!,
+                              personName: widget.personName,
+                              amount: netDue,
+                            ),
+                          ),
+                        ),
+                      ),
 
                     // Clear Due button
                     if (netDue > 0)

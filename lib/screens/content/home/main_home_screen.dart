@@ -391,12 +391,16 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 ),
                               ),
                               onTap: () {
+                                final whatsappPhone =
+                                    data['whatsappPhone'] as String? ??
+                                    data['phone'] as String? ?? '';
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => AddDueAmountScreen(
                                       personId: personId,
                                       personName: name,
+                                      whatsappPhone: whatsappPhone,
                                     ),
                                   ),
                                 );

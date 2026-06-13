@@ -9,13 +9,22 @@ class DatabaseService {
       .collection('people');
 
   // Add a new person
-  Future<void> addPerson(String name, String phone, String uniqueId) async {
+  Future<void> addPerson(
+    String name,
+    String phone,
+    String uniqueId, {
+    DateTime? dueDate,
+    String? whatsappPhone,
+  }) async {
     await peopleCollection.add({
       'name': name.trim(),
       'phone': phone.trim(),
       'uniqueId': uniqueId,
       'createdBy': user!.email,
       'createdAt': FieldValue.serverTimestamp(),
+      if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate),
+      if (whatsappPhone != null && whatsappPhone.isNotEmpty)
+        'whatsappPhone': whatsappPhone.trim(),
     });
   }
 

@@ -1,4 +1,5 @@
 import 'package:digital_khata/app.dart';
+import 'package:digital_khata/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,9 @@ void main() {
   ));
 
   // Initialize Firebase in the background
-  Firebase.initializeApp().then((_) {
+  Firebase.initializeApp().then((_) async {
+    // Initialize notification service after Firebase is ready
+    await NotificationService().initialize();
     runApp(const MyApp());
   }).catchError((e, stackTrace) {
     runApp(MaterialApp(
