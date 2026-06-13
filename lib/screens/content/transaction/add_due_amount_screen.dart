@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/components/my_button.dart';
 import 'package:digital_khata/components/my_text_field.dart';
 import 'package:digital_khata/services/notification_service.dart';
@@ -187,7 +187,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Total Due: रू ${totalDueAmount.toStringAsFixed(2)}',
+                            'Total Due: Rs. ${totalDueAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -195,7 +195,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Total Paid: रू ${totalPaidAmount.toStringAsFixed(2)}',
+                            'Total Paid: Rs. ${totalPaidAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -204,7 +204,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Net Due: रू ${netDue.toStringAsFixed(2)}',
+                            'Net Due: Rs. ${netDue.toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -287,7 +287,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                                     '${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
                                   ),
                                   trailing: Text(
-                                    'रू ${data['price'].toString()}',
+                                    'Rs. ${data['price'].toString()}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.red,
@@ -331,7 +331,7 @@ class _AddDueAmountScreenState extends State<AddDueAmountScreen> {
                                     '${time.day}/${time.month}/${time.year} ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
                                   ),
                                   trailing: Text(
-                                    'रू ${data['amount'].toString()}',
+                                    'Rs. ${data['amount'].toString()}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.green,

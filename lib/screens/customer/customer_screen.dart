@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/services/customer_service.dart';
 import 'package:flutter/material.dart';
 
@@ -68,7 +68,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                           style: TextStyle(fontSize: 16),
                         ),
                         Text(
-                          'रू ${totals['totalDue']!.toStringAsFixed(2)}',
+                          'Rs. ${totals['totalDue']!.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -86,7 +86,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                           style: TextStyle(fontSize: 16),
                         ),
                         Text(
-                          'रू ${totals['totalPaid']!.toStringAsFixed(2)}',
+                          'Rs. ${totals['totalPaid']!.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -107,7 +107,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                           ),
                         ),
                         Text(
-                          'रू ${totals['netDue']!.toStringAsFixed(2)}',
+                          'Rs. ${totals['netDue']!.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -158,7 +158,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           trailing: Text(
-                            'रू ${data['price'].toString()}',
+                            'Rs. ${data['price'].toString()}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.red,
@@ -212,7 +212,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           trailing: Text(
-                            'रू ${data['amount'].toString()}',
+                            'Rs. ${data['amount'].toString()}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.green,

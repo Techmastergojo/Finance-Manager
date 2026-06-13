@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/helper/helper_function.dart';
-import 'package:digital_khata/screens/content/transaction/add_due_amount_screen.dart';
+import 'package:digital_khata/screens/content/customer/khata_screen.dart';
+import 'package:digital_khata/screens/content/settings/shop_profile_screen.dart';
 import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
@@ -90,6 +91,15 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                   },
                   icon: const Icon(Icons.logout_outlined),
                 ),
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => const ShopProfileScreen(),
+                    ));
+                  },
+                  icon: const Icon(Icons.storefront_outlined),
+                  tooltip: 'Shop Profile',
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -174,7 +184,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                             ),
                             const SizedBox(height: 5),
                             Text(
-                              "रू ${totalDue.toStringAsFixed(2)}",
+                              "Rs. ${totalDue.toStringAsFixed(2)}",
                               style: const TextStyle(
                                 fontSize: 40,
                                 color: Colors.white,
@@ -197,7 +207,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                       ),
                                     ),
                                     Text(
-                                      "रू ${lowestDue.toStringAsFixed(2)}",
+                                      "Rs. ${lowestDue.toStringAsFixed(2)}",
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
@@ -226,7 +236,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                       ),
                                     ),
                                     Text(
-                                      "रू ${highestDue.toStringAsFixed(2)}",
+                                      "Rs. ${highestDue.toStringAsFixed(2)}",
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.white,
@@ -381,7 +391,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 ),
                               ),
                               trailing: Text(
-                                'रू ${totalDue.toStringAsFixed(2)}',
+                                'Rs. ${totalDue.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: totalDue > 0
@@ -391,16 +401,16 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                 ),
                               ),
                               onTap: () {
-                                final whatsappPhone =
-                                    data['whatsappPhone'] as String? ??
-                                    data['phone'] as String? ?? '';
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => AddDueAmountScreen(
+                                    builder: (_) => KhataScreen(
                                       personId: personId,
                                       personName: name,
-                                      whatsappPhone: whatsappPhone,
+                                      personData: data,
+                                      whatsappPhone: data['whatsappPhone'] as String? ?? '',
+                                      phone: data['phone'] as String? ?? '',
+                                      uniqueId: data['uniqueId'] as String? ?? '',
                                     ),
                                   ),
                                 );

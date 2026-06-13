@@ -3,12 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class DatabaseService {
   final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // People collection reference
-  final CollectionReference peopleCollection = FirebaseFirestore.instance
-      .collection('people');
+  CollectionReference get peopleCollection => _db.collection('people');
+  CollectionReference get cashbookCollection => _db.collection('cashbook');
+  DocumentReference get shopProfileDoc =>
+      _db.collection('userSettings').doc(user?.uid);
 
-  // Add a new person
+  // ============ PEOPLE / CUSTOMERS ============
+
   Future<void> addPerson(
     String name,
     String phone,
@@ -28,7 +31,44 @@ class DatabaseService {
     });
   }
 
-  // Get stream of people for current user
+  Future<void> updatePerson(
+    String personId, {
+    required String name,
+    required String phone,
+    String? whatsappPhone,
+    DateTime? dueDate,
+  }) async {
+    final Map<String, dynamic> data = {
+      'name': name.trim(),
+      'phone': phone.trim(),
+      'whatsappPhone': whatsappPhone?.trim() ?? '',
+    };
+    if (dueDate != null) {
+      data['dueDate'] = Timestamp.fromDate(dueDate);
+    } else {
+      data['dueDate'] = FieldValue.delete();
+    }
+    await peopleCollection.doc(personId).update(data);
+  }
+
+  Future<void> deletePerson(String personId) async {
+    final dueItems = await peopleCollection
+        .doc(personId)
+        .collection('dueItems')
+        .get();
+    for (var doc in dueItems.docs) {
+      await doc.reference.delete();
+    }
+    final payments = await peopleCollection
+        .doc(personId)
+        .collection('payments')
+        .get();
+    for (var doc in payments.docs) {
+      await doc.reference.delete();
+    }
+    await peopleCollection.doc(personId).delete();
+  }
+
   Stream<QuerySnapshot> get peopleStream {
     return peopleCollection
         .where('createdBy', isEqualTo: user!.email)
@@ -36,16 +76,53 @@ class DatabaseService {
         .snapshots();
   }
 
-  // Add due item for a person
-  Future<void> addDueItem(String personId, String item, double price) async {
+  // ============ DUE ITEMS ============
+
+  Future<void> addDueItem(
+    String personId,
+    String item,
+    double price, {
+    String? note,
+  }) async {
     await peopleCollection.doc(personId).collection('dueItems').add({
       'item': item,
       'price': price,
+      if (note != null && note.isNotEmpty) 'note': note,
       'time': Timestamp.now(),
     });
   }
 
-  // Add payment (clear due) for a person
+  Future<void> updateDueItem(
+    String personId,
+    String itemId,
+    String item,
+    double price,
+  ) async {
+    await peopleCollection
+        .doc(personId)
+        .collection('dueItems')
+        .doc(itemId)
+        .update({'item': item, 'price': price});
+  }
+
+  Future<void> deleteDueItem(String personId, String itemId) async {
+    await peopleCollection
+        .doc(personId)
+        .collection('dueItems')
+        .doc(itemId)
+        .delete();
+  }
+
+  Stream<QuerySnapshot> getDueItemsStream(String personId) {
+    return peopleCollection
+        .doc(personId)
+        .collection('dueItems')
+        .orderBy('time', descending: false)
+        .snapshots();
+  }
+
+  // ============ PAYMENTS ============
+
   Future<void> addPayment(
     String personId,
     double amount,
@@ -53,79 +130,124 @@ class DatabaseService {
   ) async {
     await peopleCollection.doc(personId).collection('payments').add({
       'amount': amount,
-      'description': description,
+      'description': description.isEmpty ? 'Payment received' : description,
       'time': Timestamp.now(),
     });
   }
 
-  // Get due items stream for a person
-  Stream<QuerySnapshot> getDueItemsStream(String personId) {
-    return peopleCollection
+  Future<void> deletePayment(String personId, String paymentId) async {
+    await peopleCollection
         .doc(personId)
-        .collection('dueItems')
-        .orderBy('time', descending: true)
-        .snapshots();
+        .collection('payments')
+        .doc(paymentId)
+        .delete();
   }
 
-  // Get payments stream for a person
   Stream<QuerySnapshot> getPaymentsStream(String personId) {
     return peopleCollection
         .doc(personId)
         .collection('payments')
-        .orderBy('time', descending: true)
+        .orderBy('time', descending: false)
         .snapshots();
   }
 
-  // Calculate total due amount for a person
+  // ============ TOTALS ============
+
   Future<double> getTotalDue(String personId) async {
     final dueSnapshot = await peopleCollection
         .doc(personId)
         .collection('dueItems')
         .get();
-
     double totalDue = 0;
     for (var item in dueSnapshot.docs) {
-      totalDue += (item.data()['price'] ?? 0).toDouble();
+      totalDue += ((item.data() as Map)['price'] ?? 0).toDouble();
     }
-
     final paymentSnapshot = await peopleCollection
         .doc(personId)
         .collection('payments')
         .get();
-
     double totalPayments = 0;
     for (var payment in paymentSnapshot.docs) {
-      totalPayments += (payment.data()['amount'] ?? 0).toDouble();
+      totalPayments += ((payment.data() as Map)['amount'] ?? 0).toDouble();
     }
-
     return totalDue - totalPayments;
   }
 
-  // Get all people with their total due amounts
   Future<Map<String, double>> getAllPeopleWithTotals() async {
     final peopleSnapshot = await peopleCollection
         .where('createdBy', isEqualTo: user!.email)
         .get();
-
     Map<String, double> totals = {};
-
     for (var person in peopleSnapshot.docs) {
       final total = await getTotalDue(person.id);
       totals[person.id] = total;
     }
-
     return totals;
+  }
+
+  // ============ CASHBOOK (ROZNAMCHA) ============
+
+  Future<void> addCashEntry({
+    required String type, // 'in' or 'out'
+    required double amount,
+    required String description,
+    required String category,
+    DateTime? date,
+  }) async {
+    await cashbookCollection.add({
+      'type': type,
+      'amount': amount,
+      'description': description,
+      'category': category,
+      'date': Timestamp.fromDate(date ?? DateTime.now()),
+      'createdBy': user!.uid,
+    });
+  }
+
+  Future<void> deleteCashEntry(String entryId) async {
+    await cashbookCollection.doc(entryId).delete();
+  }
+
+  Stream<QuerySnapshot> get cashbookStream {
+    return cashbookCollection
+        .where('createdBy', isEqualTo: user!.uid)
+        .orderBy('date', descending: true)
+        .snapshots();
+  }
+
+  // ============ SHOP PROFILE ============
+
+  Future<void> saveShopProfile({
+    required String shopName,
+    required String ownerName,
+    required String phone,
+    String address = '',
+  }) async {
+    await shopProfileDoc.set({
+      'shopName': shopName.trim(),
+      'ownerName': ownerName.trim(),
+      'phone': phone.trim(),
+      'address': address.trim(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Stream<DocumentSnapshot> get shopProfileStream => shopProfileDoc.snapshots();
+
+  Future<Map<String, dynamic>> getShopProfile() async {
+    final doc = await shopProfileDoc.get();
+    if (doc.exists) return doc.data() as Map<String, dynamic>;
+    return {
+      'shopName': 'My Shop',
+      'ownerName': '',
+      'phone': '',
+      'address': '',
+    };
   }
 }
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // Get current user
   User? get currentUser => _auth.currentUser;
-
-  // Sign out
-  Future<void> signOut() async {
-    await _auth.signOut();
-  }
+  Future<void> signOut() async => await _auth.signOut();
 }

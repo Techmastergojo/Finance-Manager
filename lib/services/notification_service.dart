@@ -116,21 +116,25 @@ Future<void> openWhatsApp({
   required String phone,
   required String personName,
   required double amount,
+  String? customMessage,
 }) async {
   // Clean phone number — remove spaces, dashes, +, etc.
   final cleanPhone = phone.replaceAll(RegExp(r'[\s\-\(\)\+]'), '');
 
-  final message = Uri.encodeComponent(
-    'Hello $personName,\n\n'
-    'This is a friendly reminder that you have a pending payment of '
-    'Rs. ${amount.toStringAsFixed(2)} due.\n\n'
-    'Please clear the amount at your earliest convenience.\n\n'
-    'Thank you!',
-  );
+  final body = customMessage ??
+      'Hello $personName,\n\n'
+          'This is a friendly reminder that you have a pending payment of '
+          'Rs. ${amount.toStringAsFixed(2)} due.\n\n'
+          'Please clear the amount at your earliest convenience.\n\n'
+          'Thank you!';
+
+  final message = Uri.encodeComponent(body);
 
   // Try WhatsApp deep link first
-  final whatsappUrl = Uri.parse('whatsapp://send?phone=$cleanPhone&text=$message');
-  final whatsappWebUrl = Uri.parse('https://wa.me/$cleanPhone?text=$message');
+  final whatsappUrl =
+      Uri.parse('whatsapp://send?phone=$cleanPhone&text=$message');
+  final whatsappWebUrl =
+      Uri.parse('https://wa.me/$cleanPhone?text=$message');
 
   if (await canLaunchUrl(whatsappUrl)) {
     await launchUrl(whatsappUrl);
