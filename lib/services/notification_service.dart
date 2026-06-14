@@ -27,7 +27,15 @@ class NotificationService {
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap if needed
+        if (response.payload != null && response.payload!.startsWith('whatsapp:')) {
+          final parts = response.payload!.split(':');
+          if (parts.length >= 4) {
+            final phone = parts[1];
+            final personName = parts[2];
+            final amount = double.tryParse(parts[3]) ?? 0.0;
+            openWhatsApp(phone: phone, personName: personName, amount: amount);
+          }
+        }
       },
     );
 

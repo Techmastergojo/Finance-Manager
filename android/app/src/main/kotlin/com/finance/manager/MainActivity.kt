@@ -1,4 +1,4 @@
-package com.abhisheksharma.digital_khata
+package com.finance.manager
 
 import io.flutter.embedding.android.FlutterActivity
 
