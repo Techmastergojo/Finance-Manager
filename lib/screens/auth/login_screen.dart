@@ -47,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // show error message safely
       if (!mounted) return;
-      displayMessageToUser(e.code, context);
+      displayMessageToUser(getFirebaseErrorMessage(e), context);
     }
   }
 

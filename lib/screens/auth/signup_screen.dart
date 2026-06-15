@@ -66,7 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.pop(context);
 
       if (!mounted) return;
-      displayMessageToUser(e.code, context);
+      displayMessageToUser(getFirebaseErrorMessage(e), context);
     }
   }
 
