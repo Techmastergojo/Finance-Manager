@@ -15,15 +15,10 @@ class MainHomeScreen extends StatefulWidget {
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
   final DatabaseService _databaseService = DatabaseService();
-  final AuthService _authService = AuthService();
   String searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
-    if (_authService.currentUser == null) {
-      return const Scaffold(body: Center(child: Text("No user logged in")));
-    }
-
     final peopleStream = _databaseService.peopleStream;
 
     return SafeArea(
@@ -31,76 +26,79 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
         child: Column(
           children: [
-            // Top row with welcome and logout
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+            StreamBuilder<DocumentSnapshot>(
+              stream: _databaseService.shopProfileStream,
+              builder: (context, profileSnapshot) {
+                String shopName = "My Shop";
+                if (profileSnapshot.hasData && profileSnapshot.data!.exists) {
+                  final data = profileSnapshot.data!.data() as Map<String, dynamic>;
+                  shopName = data['shopName'] ?? "My Shop";
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Stack(
-                      alignment: Alignment.center,
+                    Row(
                       children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                Theme.of(context).colorScheme.tertiary,
-                                Theme.of(context).colorScheme.secondary,
-                                Theme.of(context).colorScheme.primary,
-                              ],
-                              transform: GradientRotation(pi / 4),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Theme.of(context).colorScheme.tertiary,
+                                    Theme.of(context).colorScheme.secondary,
+                                    Theme.of(context).colorScheme.primary,
+                                  ],
+                                  transform: GradientRotation(pi / 4),
+                                ),
+                              ),
                             ),
+                            const Icon(Icons.storefront, color: Colors.white),
+                          ],
+                        ),
+                        const SizedBox(width: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Welcome to",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
+                              ),
+                              Text(
+                                shopName,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const Icon(Icons.person, color: Colors.white),
                       ],
                     ),
-                    const SizedBox(width: 8),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Welcome,",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Theme.of(context).colorScheme.outline,
-                            ),
-                          ),
-                          Text(
-                            _authService.currentUser!.email ?? "User",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => const ShopProfileScreen(),
+                        ));
+                      },
+                      icon: const Icon(Icons.storefront_outlined),
+                      tooltip: 'Shop Profile',
                     ),
                   ],
-                ),
-                IconButton(
-                  onPressed: () {
-                    logout(context);
-                  },
-                  icon: const Icon(Icons.logout_outlined),
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const ShopProfileScreen(),
-                    ));
-                  },
-                  icon: const Icon(Icons.storefront_outlined),
-                  tooltip: 'Shop Profile',
-                ),
-              ],
+                );
+              },
             ),
             const SizedBox(height: 20),
 

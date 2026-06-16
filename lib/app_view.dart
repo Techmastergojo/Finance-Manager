@@ -23,12 +23,10 @@ class MyAppView extends StatelessWidget {
         ),
       ),
 
-      home: AuthController(),
+      home: const HomeScreen(),
       routes: {
-        '/toggle_login_signup_screen': (context) => const ToggleLoginSignup(),
-        '/home_screen': (context) => HomeScreen(),
-        // '/profile_page': (context) => ProfilePage(),
-        '/list_people_screen': (context) => ListPeopleScreen(),
+        '/home_screen': (context) => const HomeScreen(),
+        '/list_people_screen': (context) => const ListPeopleScreen(),
       },
     );
   }

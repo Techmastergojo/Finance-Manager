@@ -51,29 +51,3 @@ String getFirebaseErrorMessage(FirebaseAuthException e) {
       return e.message ?? 'An unknown error occurred. Please try again.';
   }
 }
-void logout(BuildContext context) async {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text("Logout"),
-        content: const Text("Are you sure you want to logout?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text("Cancel"),
-          ),
-          MyButton(
-            text: "Logout",
-            onTap: () async {
-              Navigator.of(context).pop();
-              await FirebaseAuth.instance.signOut();
-            },
-          ),
-        ],
-      );
-    },
-  );
-}

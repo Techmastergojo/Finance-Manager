@@ -13,7 +13,6 @@ class ListPeopleScreen extends StatefulWidget {
 
 class _ListPeopleScreenState extends State<ListPeopleScreen> {
   final DatabaseService _db = DatabaseService();
-  final AuthService _authService = AuthService();
 
   Future<void> _confirmDeletePerson(
       String personId, String personName) async {
@@ -50,10 +49,6 @@ class _ListPeopleScreenState extends State<ListPeopleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_authService.currentUser == null) {
-      return const Scaffold(body: Center(child: Text('No user logged in')));
-    }
-
     return SafeArea(
       child: Column(
         children: [

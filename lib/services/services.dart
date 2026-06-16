@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class DatabaseService {
-  final User? user = FirebaseAuth.instance.currentUser;
+  static const String _sharedEmail = 'sharedowner@digitalkhata.com';
+  static const String _sharedUid = 'shared_shop_owner_uid';
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   CollectionReference get peopleCollection => _db.collection('people');
   CollectionReference get cashbookCollection => _db.collection('cashbook');
   DocumentReference get shopProfileDoc =>
-      _db.collection('userSettings').doc(user?.uid);
+      _db.collection('userSettings').doc(_sharedUid);
 
   // ============ PEOPLE / CUSTOMERS ============
 
@@ -23,7 +23,7 @@ class DatabaseService {
       'name': name.trim(),
       'phone': phone.trim(),
       'uniqueId': uniqueId,
-      'createdBy': user!.email,
+      'createdBy': _sharedEmail,
       'createdAt': FieldValue.serverTimestamp(),
       if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate),
       if (whatsappPhone != null && whatsappPhone.isNotEmpty)
@@ -71,7 +71,7 @@ class DatabaseService {
 
   Stream<QuerySnapshot> get peopleStream {
     return peopleCollection
-        .where('createdBy', isEqualTo: user!.email)
+        .where('createdBy', isEqualTo: _sharedEmail)
         .orderBy('createdAt', descending: true)
         .snapshots();
   }
@@ -175,7 +175,7 @@ class DatabaseService {
 
   Future<Map<String, double>> getAllPeopleWithTotals() async {
     final peopleSnapshot = await peopleCollection
-        .where('createdBy', isEqualTo: user!.email)
+        .where('createdBy', isEqualTo: _sharedEmail)
         .get();
     Map<String, double> totals = {};
     for (var person in peopleSnapshot.docs) {
@@ -200,7 +200,7 @@ class DatabaseService {
       'description': description,
       'category': category,
       'date': Timestamp.fromDate(date ?? DateTime.now()),
-      'createdBy': user!.uid,
+      'createdBy': _sharedUid,
     });
   }
 
@@ -210,7 +210,7 @@ class DatabaseService {
 
   Stream<QuerySnapshot> get cashbookStream {
     return cashbookCollection
-        .where('createdBy', isEqualTo: user!.uid)
+        .where('createdBy', isEqualTo: _sharedUid)
         .orderBy('date', descending: true)
         .snapshots();
   }
@@ -246,8 +246,13 @@ class DatabaseService {
   }
 }
 
+class MockUser {
+  final String email = 'sharedowner@digitalkhata.com';
+  final String uid = 'shared_shop_owner_uid';
+}
+
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  User? get currentUser => _auth.currentUser;
-  Future<void> signOut() async => await _auth.signOut();
+  final MockUser _mockUser = MockUser();
+  dynamic get currentUser => _mockUser;
+  Future<void> signOut() async {}
 }
