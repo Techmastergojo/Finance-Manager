@@ -238,7 +238,7 @@ class DatabaseService {
     final doc = await shopProfileDoc.get();
     if (doc.exists) return doc.data() as Map<String, dynamic>;
     return {
-      'shopName': 'My Shop',
+      'shopName': 'Allah Tawakkal Traders',
       'ownerName': '',
       'phone': '',
       'address': '',

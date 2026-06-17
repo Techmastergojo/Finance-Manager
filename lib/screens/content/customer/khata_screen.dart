@@ -154,9 +154,14 @@ class _KhataScreenState extends State<KhataScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Outstanding: Rs. ${netDue.toStringAsFixed(2)}',
-                style: const TextStyle(
-                    color: Colors.red, fontWeight: FontWeight.bold)),
+            Text(
+              netDue >= 0
+                  ? 'Outstanding: Rs. ${netDue.toStringAsFixed(2)}'
+                  : 'Advance: Rs. ${(-netDue).toStringAsFixed(2)}',
+              style: TextStyle(
+                  color: netDue >= 0 ? Colors.red : Colors.green,
+                  fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _paymentController,
@@ -184,10 +189,10 @@ class _KhataScreenState extends State<KhataScreen> {
             onPressed: () async {
               final amount =
                   double.tryParse(_paymentController.text.trim()) ?? 0;
-              if (amount <= 0 || amount > netDue) {
+              if (amount <= 0) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content:
-                      Text('Amount must be > 0 and ≤ outstanding balance'),
+                      Text('Amount must be greater than 0'),
                   backgroundColor: Colors.orange,
                 ));
                 return;
@@ -383,7 +388,7 @@ class _KhataScreenState extends State<KhataScreen> {
                 future: _db.getShopProfile(),
                 builder: (ctx, shopSnap) {
                   final shopName =
-                      shopSnap.data?['shopName'] ?? 'My Shop';
+                      shopSnap.data?['shopName'] ?? 'Allah Tawakkal Traders';
 
                   return Column(
                     children: [
@@ -476,27 +481,26 @@ class _KhataScreenState extends State<KhataScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            if (netDue > 0)
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        Colors.green.shade50,
-                                    foregroundColor:
-                                        Colors.green.shade700,
-                                    elevation: 0,
-                                    side: BorderSide(
-                                        color: Colors.green.shade200),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                  ),
-                                  icon: const Icon(Icons.payments),
-                                  label: const Text('Payment'),
-                                  onPressed: () =>
-                                      _showPaymentDialog(netDue),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Colors.green.shade50,
+                                  foregroundColor:
+                                      Colors.green.shade700,
+                                  elevation: 0,
+                                  side: BorderSide(
+                                      color: Colors.green.shade200),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(10)),
                                 ),
+                                icon: const Icon(Icons.payments),
+                                label: const Text('Payment'),
+                                onPressed: () =>
+                                    _showPaymentDialog(netDue),
                               ),
+                            ),
                             if (_effectiveWaPhone.isNotEmpty) ...[
                               const SizedBox(width: 10),
                               ElevatedButton.icon(

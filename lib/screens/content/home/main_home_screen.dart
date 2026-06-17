@@ -29,10 +29,10 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             StreamBuilder<DocumentSnapshot>(
               stream: _databaseService.shopProfileStream,
               builder: (context, profileSnapshot) {
-                String shopName = "My Shop";
+                String shopName = "Allah Tawakkal Traders";
                 if (profileSnapshot.hasData && profileSnapshot.data!.exists) {
-                  final data = profileSnapshot.data!.data() as Map<String, dynamic>;
-                  shopName = data['shopName'] ?? "My Shop";
+                   final data = profileSnapshot.data!.data() as Map<String, dynamic>;
+                   shopName = data['shopName'] ?? "Allah Tawakkal Traders";
                 }
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

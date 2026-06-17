@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="Finance Manager"
+        android:label="Allah Tawakkal Traders"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
