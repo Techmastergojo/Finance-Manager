@@ -446,7 +446,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             decoration: BoxDecoration(
               color: Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: BorderSide(
+              border: Border.all(
                 color: Colors.grey.withOpacity(0.3),
                 width: 1,
               ),
@@ -488,7 +488,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             decoration: BoxDecoration(
               color: isOnline ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: BorderSide(
+              border: Border.all(
                 color: isOnline ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
                 width: 1,
               ),
