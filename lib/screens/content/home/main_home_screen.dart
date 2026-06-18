@@ -87,14 +87,20 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                         ),
                       ],
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(
-                          builder: (_) => const ShopProfileScreen(),
-                        ));
-                      },
-                      icon: const Icon(Icons.storefront_outlined),
-                      tooltip: 'Shop Profile',
+                    Row(
+                      children: [
+                        _buildSyncStatusIndicator(),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(
+                              builder: (_) => const ShopProfileScreen(),
+                            ));
+                          },
+                          icon: const Icon(Icons.storefront_outlined),
+                          tooltip: 'Shop Profile',
+                        ),
+                      ],
                     ),
                   ],
                 );
@@ -425,6 +431,93 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSyncStatusIndicator() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('people')
+          .snapshots(includeMetadataChanges: true),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: BorderSide(
+                color: Colors.grey.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 6,
+                  height: 6,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Checking...',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final hasPending = snapshot.hasData ? snapshot.data!.metadata.hasPendingWrites : false;
+        final isOnline = !hasPending;
+
+        return Tooltip(
+          message: isOnline
+              ? 'All data is securely backed up to the cloud'
+              : 'App is offline. Data is saved locally and will auto-sync when online',
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isOnline ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: BorderSide(
+                color: isOnline ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isOnline ? Colors.green : Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isOnline ? 'Cloud Synced' : 'Saving Offline',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isOnline ? Colors.green.shade800 : Colors.orange.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

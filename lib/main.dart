@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:digital_khata/app.dart';
 import 'package:digital_khata/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,6 +17,12 @@ void main() {
 
   // Initialize Firebase in the background
   Firebase.initializeApp().then((_) async {
+    // Configure Firestore offline persistence & unlimited cache
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+
     // Initialize notification service after Firebase is ready
     await NotificationService().initialize();
     runApp(const MyApp());
