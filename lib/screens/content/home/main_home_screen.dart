@@ -128,35 +128,31 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
                       final totals = snapshot.data ?? {};
 
-                      double totalDue = 0;
-                      double lowestDue = double.infinity;
-                      double highestDue = 0;
-                      String lowestPerson = '';
-                      String highestPerson = '';
+                      double totalToReceive = 0;
+                      double totalToGive = 0;
 
                       for (var person in people) {
                         final data = person.data() as Map<String, dynamic>;
-                        final name = data['name'] ?? '';
                         final personId = person.id;
+                        final type = data['type'] ?? 'due';
                         final personTotal = totals[personId] ?? 0;
 
-                        totalDue += personTotal;
-
-                        if (personTotal < lowestDue) {
-                          lowestDue = personTotal;
-                          lowestPerson = name;
-                        }
-
-                        if (personTotal > highestDue) {
-                          highestDue = personTotal;
-                          highestPerson = name;
+                        if (type == 'due') {
+                          if (personTotal > 0) {
+                            totalToReceive += personTotal;
+                          }
+                        } else if (type == 'give') {
+                          if (personTotal > 0) {
+                            totalToGive += personTotal;
+                          }
                         }
                       }
 
+                      final netBalance = totalToReceive - totalToGive;
+
                       return Container(
                         width: double.infinity,
-                        height: MediaQuery.of(context).size.width / 2,
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -179,85 +175,102 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              "Total Due Amount",
+                              "Allah Tawakkal Traders Summary",
                               style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              "Rs. ${totalDue.toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                fontSize: 40,
-                                color: Colors.white,
+                                fontSize: 13,
+                                color: Colors.white70,
                                 fontWeight: FontWeight.bold,
+                                letterSpacing: 0.8,
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Lowest Due / Person",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w400,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Row(
+                                        children: [
+                                          Icon(Icons.arrow_downward, color: Colors.greenAccent, size: 16),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            "To Receive",
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.white90,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    Text(
-                                      "Rs. ${lowestDue.toStringAsFixed(2)}",
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        "Rs. ${totalToReceive.toStringAsFixed(0)}",
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      lowestPerson,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    const Text(
-                                      "Highest Due / Person",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w400,
+                                Container(
+                                  width: 1,
+                                  height: 45,
+                                  color: Colors.white30,
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Row(
+                                        children: [
+                                          Icon(Icons.arrow_upward, color: Colors.redAccent, size: 16),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            "To Give",
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.white90,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    Text(
-                                      "Rs. ${highestDue.toStringAsFixed(2)}",
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        "Rs. ${totalToGive.toStringAsFixed(0)}",
+                                        style: const TextStyle(
+                                          fontSize: 22,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    Text(
-                                      highestPerson,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white70,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white12,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                netBalance >= 0 
+                                    ? "Net Balance (Get): Rs. ${netBalance.toStringAsFixed(0)}" 
+                                    : "Net Balance (Give): Rs. ${netBalance.abs().toStringAsFixed(0)}",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -349,6 +362,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                       final personId = filteredPeople[index].id;
                       final name = data['name'] ?? '';
                       final uniqueId = data['uniqueId'] ?? '';
+                      final type = data['type'] ?? 'due';
 
                       return FutureBuilder<double>(
                         future: _databaseService.getTotalDue(personId),
@@ -387,22 +401,67 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                   fontSize: 16,
                                 ),
                               ),
-                              subtitle: Text(
-                                'ID: $uniqueId',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'ID: $uniqueId',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: type == 'due'
+                                          ? Colors.blue.shade50
+                                          : Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      type == 'due' ? 'Customer (To Receive)' : 'Supplier (To Give)',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: type == 'due'
+                                            ? Colors.blue.shade700
+                                            : Colors.orange.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              trailing: Text(
-                                'Rs. ${totalDue.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: totalDue > 0
-                                      ? Colors.red
-                                      : Colors.green,
-                                  fontSize: 16,
-                                ),
+                              trailing: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Rs. ${totalDue.abs().toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: totalDue <= 0
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  Text(
+                                    totalDue == 0
+                                        ? 'Clear'
+                                        : totalDue < 0
+                                            ? 'Advance'
+                                            : 'Pending',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: totalDue <= 0
+                                          ? Colors.green.shade600
+                                          : Colors.red.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                               onTap: () {
                                 Navigator.push(

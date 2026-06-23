@@ -3,7 +3,16 @@ import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
 class CashbookScreen extends StatefulWidget {
-  const CashbookScreen({super.key});
+  final String khataId;
+  final String khataName;
+  final bool isSubPage;
+
+  const CashbookScreen({
+    super.key,
+    this.khataId = 'main',
+    this.khataName = 'Cashbook',
+    this.isSubPage = false,
+  });
 
   @override
   State<CashbookScreen> createState() => _CashbookScreenState();
@@ -212,7 +221,8 @@ class _CashbookScreenState extends State<CashbookScreen> {
                               content: Text('Enter a valid amount')));
                       return;
                     }
-                    await _db.addCashEntry(
+                    await _db.addKhataEntry(
+                      khataId: widget.khataId,
                       type: type,
                       amount: amount,
                       description: descCtrl.text.trim().isEmpty
@@ -267,8 +277,8 @@ class _CashbookScreenState extends State<CashbookScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Cashbook',
-                    style: TextStyle(
+                Text(widget.khataName,
+                    style: const TextStyle(
                         fontSize: 22, fontWeight: FontWeight.bold)),
                 Row(
                   children: [
@@ -283,7 +293,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
 
           // Summary totals bar
           StreamBuilder<QuerySnapshot>(
-            stream: _db.cashbookStream,
+            stream: _db.getKhataEntriesStream(widget.khataId),
             builder: (ctx, snap) {
               double totalIn = 0, totalOut = 0;
               if (snap.hasData) {
@@ -334,7 +344,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
           // Entries list
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _db.cashbookStream,
+              stream: _db.getKhataEntriesStream(widget.khataId),
               builder: (ctx, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -409,7 +419,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
                             false;
                       },
                       onDismissed: (_) =>
-                          _db.deleteCashEntry(docs[i].id),
+                          _db.deleteKhataEntry(widget.khataId, docs[i].id),
                       child: Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         shape: RoundedRectangleBorder(
@@ -460,6 +470,18 @@ class _CashbookScreenState extends State<CashbookScreen> {
         ],
       ),
     );
+
+    if (widget.isSubPage) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(widget.khataName),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: content,
+      );
+    }
+    return content;
   }
 
   Widget _addBtn(String label, Color color, VoidCallback onTap) {

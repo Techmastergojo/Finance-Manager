@@ -46,14 +46,6 @@ class _ReportsScreenState extends State<ReportsScreen>
     }
   }
 
-  String _formatDate(DateTime dt) {
-    final months = [
-      'Jan','Feb','Mar','Apr','May','Jun',
-      'Jul','Aug','Sep','Oct','Nov','Dec'
-    ];
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -94,10 +86,11 @@ class _ReportsScreenState extends State<ReportsScreen>
                               Border.all(color: Colors.green.shade300),
                         ),
                         child: const Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.cloud_done,
                                 color: Colors.green, size: 16),
-                            SizedBox(width: 4),
+                            SizedBox(width: 6),
                             Text('Backed Up',
                                 style: TextStyle(
                                     color: Colors.green,
@@ -193,7 +186,16 @@ class _KhataSummaryTab extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snap.hasData || snap.data!.docs.isEmpty) {
-          return const Center(child: Text('No customers yet'));
+          return const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.people_outline, size: 50, color: Colors.grey),
+                SizedBox(height: 12),
+                Text('No customers or suppliers yet'),
+              ],
+            ),
+          );
         }
 
         final people = snap.data!.docs;
@@ -205,11 +207,19 @@ class _KhataSummaryTab extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             final reports = reportSnap.data!;
-            final totalOutstanding =
-                reports.fold(0.0, (sum, r) => sum + r.netDue.clamp(0, double.infinity));
-            final totalPeople = reports.length;
-            final debtors = reports.where((r) => r.netDue > 0).toList()
+            
+            // Separate receivables and payables
+            final receivablesList = reports.where((r) => r.type == 'due' && r.netDue > 0).toList()
               ..sort((a, b) => b.netDue.compareTo(a.netDue));
+            final payablesList = reports.where((r) => r.type == 'give' && r.netDue > 0).toList()
+              ..sort((a, b) => b.netDue.compareTo(a.netDue));
+
+            final totalReceivable = receivablesList.fold(0.0, (sum, r) => sum + r.netDue);
+            final totalPayable = payablesList.fold(0.0, (sum, r) => sum + r.netDue);
+            final netBalance = totalReceivable - totalPayable;
+
+            final totalCustomers = reports.where((r) => r.type == 'due').length;
+            final totalSuppliers = reports.where((r) => r.type == 'give').length;
 
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -219,57 +229,100 @@ class _KhataSummaryTab extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _reportCard(
-                        'Total Outstanding',
-                        'Rs. ${totalOutstanding.toStringAsFixed(0)}',
-                        Icons.account_balance_wallet,
-                        Colors.red,
+                        'Receivables (Get)',
+                        'Rs. ${totalReceivable.toStringAsFixed(0)}',
+                        Icons.arrow_downward,
+                        Colors.green,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _reportCard(
-                        'Total Customers',
-                        '$totalPeople',
-                        Icons.people,
-                        Colors.blue,
+                        'Payables (Give)',
+                        'Rs. ${totalPayable.toStringAsFixed(0)}',
+                        Icons.arrow_upward,
+                        Colors.red,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                _reportCard(
+                  'Net Balance',
+                  'Rs. ${netBalance.toStringAsFixed(0)}',
+                  Icons.account_balance,
+                  netBalance >= 0 ? Colors.green : Colors.red,
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: _reportCard(
-                        'With Balance',
-                        '${debtors.length}',
-                        Icons.warning_amber,
-                        Colors.orange,
+                        'Customers',
+                        '$totalCustomers',
+                        Icons.people,
+                        Colors.blue,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _reportCard(
-                        'All Clear',
-                        '${totalPeople - debtors.length}',
-                        Icons.check_circle,
-                        Colors.green,
+                        'Suppliers',
+                        '$totalSuppliers',
+                        Icons.local_shipping,
+                        Colors.orange,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 20),
-
-                if (debtors.isNotEmpty) ...[
-                  const Text('TOP DEBTORS',
+                if (receivablesList.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text('TOP RECEIVABLES (CUSTOMERS)',
                       style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.3,
                           color: Colors.grey)),
                   const SizedBox(height: 10),
-                  ...debtors.take(10).map((r) => Card(
+                  ...receivablesList.take(5).map((r) => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.green.shade100,
+                            child: Text(
+                              r.name.isNotEmpty ? r.name[0].toUpperCase() : '?',
+                              style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          title: Text(r.name,
+                              style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(r.phone),
+                          trailing: Text(
+                            'Rs. ${r.netDue.toStringAsFixed(0)}',
+                            style: TextStyle(
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15),
+                          ),
+                        ),
+                      )),
+                ],
+
+                if (payablesList.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text('TOP PAYABLES (SUPPLIERS)',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.3,
+                          color: Colors.grey)),
+                  const SizedBox(height: 10),
+                  ...payablesList.take(5).map((r) => Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
@@ -277,22 +330,19 @@ class _KhataSummaryTab extends StatelessWidget {
                           leading: CircleAvatar(
                             backgroundColor: Colors.red.shade100,
                             child: Text(
-                              r.name.isNotEmpty
-                                  ? r.name[0].toUpperCase()
-                                  : '?',
+                              r.name.isNotEmpty ? r.name[0].toUpperCase() : '?',
                               style: TextStyle(
                                   color: Colors.red.shade700,
                                   fontWeight: FontWeight.bold),
                             ),
                           ),
                           title: Text(r.name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600)),
+                              style: const TextStyle(fontWeight: FontWeight.w600)),
                           subtitle: Text(r.phone),
                           trailing: Text(
                             'Rs. ${r.netDue.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                                color: Colors.red,
+                            style: TextStyle(
+                                color: Colors.red.shade700,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15),
                           ),
@@ -317,6 +367,7 @@ class _KhataSummaryTab extends StatelessWidget {
         id: p.id,
         name: data['name'] ?? '',
         phone: data['phone'] ?? '',
+        type: data['type'] ?? 'due',
         netDue: netDue,
       ));
     }
@@ -332,20 +383,24 @@ class _KhataSummaryTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: color)),
-          const SizedBox(height: 2),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 12, color: Colors.grey.shade600)),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: color)),
+              const SizedBox(height: 2),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 12, color: Colors.grey.shade600)),
+            ],
+          ),
         ],
       ),
     );
@@ -353,166 +408,226 @@ class _KhataSummaryTab extends StatelessWidget {
 }
 
 class _PersonReport {
-  final String id, name, phone;
+  final String id, name, phone, type;
   final double netDue;
   _PersonReport(
       {required this.id,
       required this.name,
       required this.phone,
+      required this.type,
       required this.netDue});
 }
 
 // ─── Cashbook Summary Tab ─────────────────────────────────────────────────────
 
-class _CashbookSummaryTab extends StatelessWidget {
+class _CashbookSummaryTab extends StatefulWidget {
   final DatabaseService db;
   final DateTimeRange period;
 
   const _CashbookSummaryTab({required this.db, required this.period});
 
   @override
+  State<_CashbookSummaryTab> createState() => _CashbookSummaryTabState();
+}
+
+class _CashbookSummaryTabState extends State<_CashbookSummaryTab> {
+  String _selectedKhataId = 'main';
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: db.cashbookStream,
-      builder: (ctx, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final docs = snap.data?.docs ?? [];
-        final filtered = docs.where((d) {
-          final data = d.data() as Map<String, dynamic>;
-          final ts = data['date'] as Timestamp?;
-          if (ts == null) return false;
-          final date = ts.toDate();
-          return date.isAfter(period.start) &&
-              date.isBefore(period.end.add(const Duration(days: 1)));
-        }).toList();
-
-        double totalIn = 0, totalOut = 0;
-        final Map<String, double> categoryTotals = {};
-
-        for (var d in filtered) {
-          final data = d.data() as Map<String, dynamic>;
-          final amt = (data['amount'] ?? 0).toDouble();
-          final cat = data['category'] ?? 'other';
-          if (data['type'] == 'in') {
-            totalIn += amt;
-          } else {
-            totalOut += amt;
-          }
-          categoryTotals[cat] = (categoryTotals[cat] ?? 0) + amt;
-        }
-
-        final net = totalIn - totalOut;
-
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Summary
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: net >= 0
-                      ? [Colors.green.shade600, Colors.green.shade400]
-                      : [Colors.red.shade600, Colors.red.shade400],
+    return Column(
+      children: [
+        // Dropdown selector for Khata
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: widget.db.khatasStream,
+            builder: (context, snapshot) {
+              final customKhatas = snapshot.data?.docs ?? [];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  Text(net >= 0 ? 'NET PROFIT' : 'NET LOSS',
-                      style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          letterSpacing: 1.2)),
-                  const SizedBox(height: 4),
-                  Text('Rs. ${net.abs().toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Column(children: [
-                        const Text('Cash In',
-                            style: TextStyle(
-                                color: Colors.white70, fontSize: 12)),
-                        Text('Rs. ${totalIn.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                      ]),
-                      Container(
-                          width: 1, height: 30, color: Colors.white30),
-                      Column(children: [
-                        const Text('Cash Out',
-                            style: TextStyle(
-                                color: Colors.white70, fontSize: 12)),
-                        Text('Rs. ${totalOut.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                      ]),
-                      Container(
-                          width: 1, height: 30, color: Colors.white30),
-                      Column(children: [
-                        const Text('Entries',
-                            style: TextStyle(
-                                color: Colors.white70, fontSize: 12)),
-                        Text('${filtered.length}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
-                      ]),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedKhataId,
+                    isExpanded: true,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedKhataId = val;
+                        });
+                      }
+                    },
+                    items: [
+                      const DropdownMenuItem(
+                        value: 'main',
+                        child: Text('Main Business Cashbook', style: TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                      ...customKhatas.map((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final name = data['name'] ?? 'Unnamed Ledger';
+                        return DropdownMenuItem(
+                          value: doc.id,
+                          child: Text(name),
+                        );
+                      }),
                     ],
                   ),
-                ],
-              ),
-            ),
-
-            if (categoryTotals.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              const Text('BREAKDOWN BY CATEGORY',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.3,
-                      color: Colors.grey)),
-              const SizedBox(height: 10),
-              ...categoryTotals.entries.map((e) {
-                final catLabel = _catLabel(e.key);
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 6),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    title: Text(catLabel,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600)),
-                    trailing: Text('Rs. ${e.value.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14)),
-                  ),
-                );
-              }),
-            ],
-
-            if (filtered.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Text('No cashbook entries for this period',
-                      style: TextStyle(color: Colors.grey)),
                 ),
-              ),
-          ],
-        );
-      },
+              );
+            },
+          ),
+        ),
+        
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: widget.db.getKhataEntriesStream(_selectedKhataId),
+            builder: (ctx, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final docs = snap.data?.docs ?? [];
+              final filtered = docs.where((d) {
+                final data = d.data() as Map<String, dynamic>;
+                final ts = data['date'] as Timestamp?;
+                if (ts == null) return false;
+                final date = ts.toDate();
+                return date.isAfter(widget.period.start) &&
+                    date.isBefore(widget.period.end.add(const Duration(days: 1)));
+              }).toList();
+
+              double totalIn = 0, totalOut = 0;
+              final Map<String, double> categoryTotals = {};
+
+              for (var d in filtered) {
+                final data = d.data() as Map<String, dynamic>;
+                final amt = (data['amount'] ?? 0).toDouble();
+                final cat = data['category'] ?? 'other';
+                if (data['type'] == 'in') {
+                  totalIn += amt;
+                } else {
+                  totalOut += amt;
+                }
+                categoryTotals[cat] = (categoryTotals[cat] ?? 0) + amt;
+              }
+
+              final net = totalIn - totalOut;
+
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  // Summary
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: net >= 0
+                            ? [Colors.green.shade600, Colors.green.shade400]
+                            : [Colors.red.shade600, Colors.red.shade400],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(net >= 0 ? 'NET PROFIT' : 'NET LOSS',
+                            style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                letterSpacing: 1.2)),
+                        const SizedBox(height: 4),
+                        Text('Rs. ${net.abs().toStringAsFixed(0)}',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Column(children: [
+                              const Text('Cash In',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12)),
+                              Text('Rs. ${totalIn.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                            ]),
+                            Container(
+                                width: 1, height: 30, color: Colors.white30),
+                            Column(children: [
+                              const Text('Cash Out',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12)),
+                              Text('Rs. ${totalOut.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                            ]),
+                            Container(
+                                width: 1, height: 30, color: Colors.white30),
+                            Column(children: [
+                              const Text('Entries',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12)),
+                              Text('${filtered.length}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                            ]),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  if (categoryTotals.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    const Text('BREAKDOWN BY CATEGORY',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.3,
+                            color: Colors.grey)),
+                    const SizedBox(height: 10),
+                    ...categoryTotals.entries.map((e) {
+                      final catLabel = _catLabel(e.key);
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        child: ListTile(
+                          title: Text(catLabel,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600)),
+                          trailing: Text('Rs. ${e.value.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14)),
+                        ),
+                      );
+                    }),
+                  ],
+
+                  if (filtered.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Text('No cashbook entries for this period',
+                            style: TextStyle(color: Colors.grey)),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

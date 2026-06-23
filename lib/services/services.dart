@@ -18,6 +18,7 @@ class DatabaseService {
     String uniqueId, {
     DateTime? dueDate,
     String? whatsappPhone,
+    String type = 'due',
   }) async {
     await peopleCollection.add({
       'name': name.trim(),
@@ -25,6 +26,7 @@ class DatabaseService {
       'uniqueId': uniqueId,
       'createdBy': _sharedEmail,
       'createdAt': FieldValue.serverTimestamp(),
+      'type': type,
       if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate),
       if (whatsappPhone != null && whatsappPhone.isNotEmpty)
         'whatsappPhone': whatsappPhone.trim(),
@@ -213,6 +215,108 @@ class DatabaseService {
         .where('createdBy', isEqualTo: _sharedUid)
         .orderBy('date', descending: true)
         .snapshots();
+  }
+
+  // ============ KHATAS (CUSTOM LEDGERS) ============
+
+  CollectionReference get khatasCollection => _db.collection('khatas');
+
+  Future<void> createKhata(String name) async {
+    await khatasCollection.add({
+      'name': name.trim(),
+      'createdBy': _sharedUid,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> deleteKhata(String khataId) async {
+    if (khataId == 'main') return;
+    final entries = await khatasCollection.doc(khataId).collection('entries').get();
+    for (var doc in entries.docs) {
+      await doc.reference.delete();
+    }
+    await khatasCollection.doc(khataId).delete();
+  }
+
+  Stream<QuerySnapshot> get khatasStream {
+    return khatasCollection
+        .where('createdBy', isEqualTo: _sharedUid)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  // ============ KHATA ENTRIES ============
+
+  Future<void> addKhataEntry({
+    required String khataId,
+    required String type, // 'in' or 'out'
+    required double amount,
+    required String description,
+    required String category,
+    DateTime? date,
+  }) async {
+    if (khataId == 'main') {
+      await addCashEntry(
+        type: type,
+        amount: amount,
+        description: description,
+        category: category,
+        date: date,
+      );
+      return;
+    }
+    await khatasCollection.doc(khataId).collection('entries').add({
+      'type': type,
+      'amount': amount,
+      'description': description,
+      'category': category,
+      'date': Timestamp.fromDate(date ?? DateTime.now()),
+      'createdBy': _sharedUid,
+    });
+  }
+
+  Future<void> deleteKhataEntry(String khataId, String entryId) async {
+    if (khataId == 'main') {
+      await deleteCashEntry(entryId);
+      return;
+    }
+    await khatasCollection
+        .doc(khataId)
+        .collection('entries')
+        .doc(entryId)
+        .delete();
+  }
+
+  Stream<QuerySnapshot> getKhataEntriesStream(String khataId) {
+    if (khataId == 'main') {
+      return cashbookStream;
+    }
+    return khatasCollection
+        .doc(khataId)
+        .collection('entries')
+        .orderBy('date', descending: true)
+        .snapshots();
+  }
+
+  Stream<Map<String, double>> getKhataSummaryStream(String khataId) {
+    return getKhataEntriesStream(khataId).map((snapshot) {
+      double totalIn = 0.0;
+      double totalOut = 0.0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final amount = (data['amount'] ?? 0).toDouble();
+        if (data['type'] == 'in') {
+          totalIn += amount;
+        } else {
+          totalOut += amount;
+        }
+      }
+      return {
+        'totalIn': totalIn,
+        'totalOut': totalOut,
+        'net': totalIn - totalOut,
+      };
+    });
   }
 
   // ============ SHOP PROFILE ============

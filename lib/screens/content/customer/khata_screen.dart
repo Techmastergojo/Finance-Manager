@@ -49,6 +49,8 @@ class _KhataScreenState extends State<KhataScreen> {
           : widget.phone) ??
       '';
 
+  bool get _isDueType => (widget.personData['type'] ?? 'due') == 'due';
+
   // ─── Add Due ────────────────────────────────────────────────────
   void _showAddDueDialog() {
     _itemController.clear();
@@ -56,15 +58,15 @@ class _KhataScreenState extends State<KhataScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Add Due Item'),
+        title: Text(_isDueType ? 'Add Due Item' : 'Add Purchase / Bill'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _itemController,
-              decoration: const InputDecoration(
-                  labelText: 'Item / Description',
-                  border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: _isDueType ? 'Item / Description' : 'Bill / Purchase Item',
+                  border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -103,15 +105,15 @@ class _KhataScreenState extends State<KhataScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Due Item'),
+        title: Text(_isDueType ? 'Edit Due Item' : 'Edit Purchase / Bill'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _itemController,
-              decoration: const InputDecoration(
-                  labelText: 'Item / Description',
-                  border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: _isDueType ? 'Item / Description' : 'Bill / Purchase Item',
+                  border: const OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -150,14 +152,14 @@ class _KhataScreenState extends State<KhataScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Record Payment'),
+        title: Text(_isDueType ? 'Record Received Payment' : 'Record Payment Paid'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               netDue >= 0
-                  ? 'Outstanding: Rs. ${netDue.toStringAsFixed(2)}'
-                  : 'Advance: Rs. ${(-netDue).toStringAsFixed(2)}',
+                  ? (_isDueType ? 'Outstanding: Rs. ${netDue.toStringAsFixed(2)}' : 'We owe them: Rs. ${netDue.toStringAsFixed(2)}')
+                  : (_isDueType ? 'Advance: Rs. ${(-netDue).toStringAsFixed(2)}' : 'Paid in advance: Rs. ${(-netDue).toStringAsFixed(2)}'),
               style: TextStyle(
                   color: netDue >= 0 ? Colors.red : Colors.green,
                   fontWeight: FontWeight.bold),
@@ -165,9 +167,9 @@ class _KhataScreenState extends State<KhataScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: _paymentController,
-              decoration: const InputDecoration(
-                  labelText: 'Amount Received (Rs.)',
-                  border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: _isDueType ? 'Amount Received (Rs.)' : 'Amount Paid (Rs.)',
+                  border: const OutlineInputBorder()),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
             ),
@@ -197,8 +199,9 @@ class _KhataScreenState extends State<KhataScreen> {
                 ));
                 return;
               }
+              final defaultDesc = _isDueType ? 'Payment received' : 'Payment paid';
               await _db.addPayment(
-                  widget.personId, amount, _paymentDescController.text.trim());
+                  widget.personId, amount, _paymentDescController.text.trim().isEmpty ? defaultDesc : _paymentDescController.text.trim());
               if (ctx.mounted) Navigator.pop(ctx);
             },
             child: const Text('Record', style: TextStyle(color: Colors.white)),
@@ -220,8 +223,8 @@ class _KhataScreenState extends State<KhataScreen> {
     final buffer = StringBuffer();
     buffer.writeln('🏪 *$shopName*');
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━');
-    buffer.writeln('📋 *KHATA / LEDGER*');
-    buffer.writeln('👤 Customer: *${widget.personName}*');
+    buffer.writeln(_isDueType ? '📋 *CUSTOMER KHATA / LEDGER*' : '📋 *SUPPLIER KHATA / LEDGER*');
+    buffer.writeln(_isDueType ? '👤 Customer: *${widget.personName}*' : '👤 Supplier: *${widget.personName}*');
     if (widget.phone?.isNotEmpty == true) {
       buffer.writeln('📞 Phone: ${widget.phone}');
     }
@@ -234,7 +237,7 @@ class _KhataScreenState extends State<KhataScreen> {
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━');
 
     if (dueItems.isNotEmpty) {
-      buffer.writeln('*ITEMS DUE (UDHAR):*');
+      buffer.writeln(_isDueType ? '*ITEMS DUE (UDHAR):*' : '*BILLS / PURCHASES:*');
       for (var item in dueItems) {
         final d = item.data() as Map<String, dynamic>;
         buffer.writeln(
@@ -244,7 +247,7 @@ class _KhataScreenState extends State<KhataScreen> {
     }
 
     if (payments.isNotEmpty) {
-      buffer.writeln('*PAYMENTS RECEIVED:*');
+      buffer.writeln(_isDueType ? '*PAYMENTS RECEIVED:*' : '*PAYMENTS PAID:*');
       for (var p in payments) {
         final d = p.data() as Map<String, dynamic>;
         buffer.writeln(
@@ -254,16 +257,26 @@ class _KhataScreenState extends State<KhataScreen> {
     }
 
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━');
-    buffer.writeln(
-        '💳 Total Udhar: Rs. ${totalDue.toStringAsFixed(2)}');
-    buffer.writeln(
-        '✅ Total Paid:  Rs. ${totalPaid.toStringAsFixed(2)}');
+    buffer.writeln(_isDueType
+        ? '💳 Total Udhar: Rs. ${totalDue.toStringAsFixed(2)}'
+        : '💳 Total Bills: Rs. ${totalDue.toStringAsFixed(2)}');
+    buffer.writeln(_isDueType
+        ? '✅ Total Paid:  Rs. ${totalPaid.toStringAsFixed(2)}'
+        : '✅ Total Paid:  Rs. ${totalPaid.toStringAsFixed(2)}');
     buffer.writeln();
-    buffer.writeln(
-        '🔴 *NET BALANCE: Rs. ${netDue.toStringAsFixed(2)}*');
+    buffer.writeln(netDue >= 0
+        ? (_isDueType
+            ? '🔴 *NET BALANCE (THEY OWE): Rs. ${netDue.toStringAsFixed(2)}*'
+            : '🔴 *NET BALANCE (YOU OWE): Rs. ${netDue.toStringAsFixed(2)}*')
+        : (_isDueType
+            ? '🟢 *ADVANCE RECEIVED: Rs. ${(-netDue).toStringAsFixed(2)}*'
+            : '🟢 *ADVANCE PAID: Rs. ${(-netDue).toStringAsFixed(2)}*'));
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━━━━━');
-    buffer.writeln(
-        'Meherbani karke jald from jald balance clear karein.');
+    if (_isDueType) {
+      buffer.writeln('Meherbani karke jald se jald balance clear karein.');
+    } else {
+      buffer.writeln('Aap ka bacha hua payment jald clear kar diya jayega.');
+    }
     buffer.writeln('Shukriya! 🙏');
 
     await openWhatsApp(
@@ -310,7 +323,7 @@ class _KhataScreenState extends State<KhataScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit Customer',
+            tooltip: _isDueType ? 'Edit Customer' : 'Edit Supplier',
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(
@@ -425,7 +438,7 @@ class _KhataScreenState extends State<KhataScreen> {
                           children: [
                             Text(
                               netDue > 0
-                                  ? 'OUTSTANDING BALANCE'
+                                  ? (_isDueType ? 'OUTSTANDING RECEIVABLE' : 'OUTSTANDING PAYABLE')
                                   : 'ALL CLEAR ✓',
                               style: const TextStyle(
                                   color: Colors.white70,
@@ -446,10 +459,10 @@ class _KhataScreenState extends State<KhataScreen> {
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceEvenly,
                               children: [
-                                _statChip('Udhar',
+                                _statChip(_isDueType ? 'Udhar' : 'Bills',
                                     'Rs. ${totalDue.toStringAsFixed(0)}',
                                     Colors.red.shade100),
-                                _statChip('Paid',
+                                _statChip(_isDueType ? 'Paid' : 'Cleared',
                                     'Rs. ${totalPaid.toStringAsFixed(0)}',
                                     Colors.green.shade100),
                               ],
@@ -476,7 +489,7 @@ class _KhataScreenState extends State<KhataScreen> {
                                           BorderRadius.circular(10)),
                                 ),
                                 icon: const Icon(Icons.add),
-                                label: const Text('Add Due'),
+                                label: Text(_isDueType ? 'Add Due' : 'Add Bill'),
                                 onPressed: _showAddDueDialog,
                               ),
                             ),
@@ -496,7 +509,7 @@ class _KhataScreenState extends State<KhataScreen> {
                                           BorderRadius.circular(10)),
                                 ),
                                 icon: const Icon(Icons.payments),
-                                label: const Text('Payment'),
+                                label: Text(_isDueType ? 'Payment' : 'Pay Out'),
                                 onPressed: () =>
                                     _showPaymentDialog(netDue),
                               ),

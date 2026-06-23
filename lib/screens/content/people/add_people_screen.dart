@@ -4,7 +4,8 @@ import 'package:digital_khata/services/services.dart';
 import 'package:flutter/material.dart';
 
 class AddPeopleScreen extends StatefulWidget {
-  const AddPeopleScreen({super.key});
+  final String type; // 'due' or 'give'
+  const AddPeopleScreen({super.key, this.type = 'due'});
 
   @override
   State<AddPeopleScreen> createState() => _AddPeopleScreenState();
@@ -64,6 +65,7 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
         id,
         dueDate: _selectedDueDate,
         whatsappPhone: whatsappPhone,
+        type: widget.type,
       );
 
       if (_selectedDueDate != null) {
@@ -77,10 +79,11 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
       }
 
       if (mounted) {
+        final entityName = widget.type == 'due' ? 'Customer' : 'Supplier';
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(_selectedDueDate != null
-              ? '✅ Customer added! Reminder set for ${_dueDateController.text}'
-              : '✅ Customer added successfully!'),
+              ? '✅ $entityName added! Reminder set for ${_dueDateController.text}'
+              : '✅ $entityName added successfully!'),
           backgroundColor: Colors.green,
         ));
         Navigator.pop(context);
@@ -100,10 +103,11 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final isDue = widget.type == 'due';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Customer'),
+        title: Text(isDue ? 'Add Customer' : 'Add Supplier'),
         centerTitle: true,
         elevation: 0,
       ),
@@ -118,7 +122,7 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _nameController,
-                decoration: _dec('Customer Name', Icons.person_outline),
+                decoration: _dec(isDue ? 'Customer Name' : 'Supplier Name', Icons.person_outline),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Enter name' : null,
               ),
@@ -211,8 +215,8 @@ class _AddPeopleScreenState extends State<AddPeopleScreen> {
                           width: 22,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text('Add Customer',
-                          style: TextStyle(
+                      : Text(isDue ? 'Add Customer' : 'Add Supplier',
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
