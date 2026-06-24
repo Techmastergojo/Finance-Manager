@@ -268,7 +268,7 @@ class _CashbookScreenState extends State<CashbookScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    final content = SafeArea(
       child: Column(
         children: [
           // Header

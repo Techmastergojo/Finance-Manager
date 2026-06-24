@@ -198,7 +198,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                             "To Receive",
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: Colors.white90,
+                                              color: Colors.white70,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
@@ -234,7 +234,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
                                             "To Give",
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: Colors.white90,
+                                              color: Colors.white70,
                                               fontWeight: FontWeight.w500,
                                             ),
                                           ),
